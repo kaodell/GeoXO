@@ -1,7 +1,7 @@
 # README
 This repository contains scripts and python3 environments used to produce the analysis and figures in “Public health benefits from improved identification of severe air pollution events with geostationary satellite data” by O’Dell et al. soon to be submitted to PNAS. If you have any questions about these codes, want to use them, or find any errors, please contact Kate O’Dell at the contact email provided with this github page. 
 ## Instructions
-To complete the analysis and create figures in the paper, the python scripts in this folder are run in the following order. Note that the local and remote codes use different python environments. Both environments are provided in this folder and are entitled py_env_local and py_env_remote, for the local and remote environments, respectively. 
+To complete the analysis and create figures in the paper, the python scripts in this folder are run in the following order. Note that the local and remote codes use different python environments. Both environments are provided in this folder and are entitled py_env_local.yml and py_env_remote.yml, for the local and remote environments, respectively. 
 
 ### Step 1) HIA
 #### Prep_pop_data.py
