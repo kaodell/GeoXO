@@ -9,9 +9,9 @@ This script loads the NASA SECAD GPWv4.11 and regrids the population density usi
 
 Inputs:
 - 0.01 x 0.01 degree grid used for lat/lon for satellite-based PM2.5 datasets created by Hai Zhang
-- Population density from NASA SEDAC GPW v4.11
-- US census bureau national shape file at 5m
-- US census bureau TIGER/Line states shape files
+- Population density from NASA SEDAC GPW v4.11, available: https://sedac.ciesin.columbia.edu/data/set/gpw-v4-population-density-rev11, accessed 27 Oct 2021
+- 2018 TIGER/Line national shapefile, available: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html, accessed 27 Oct 2021
+- 2020 TIGER/Line states shapefile, avilable: https://www.census.gov/geographies/mapping-files/2020/geo/tiger-line-file.html, accessed 27 Oct 2021
 
 Outputs:
 - netCDF file containing regridded population, population density, grid area, and a US mask and california mask for the grid
@@ -20,9 +20,9 @@ Outputs:
 This script loads county level baseline rates from the CDC wonder database and grids them to the 0.01 degree grid. Run remote.
 
 Inputs:
-- County-level and state-level baseline mortality rates for 2015-2019 from the CDC WONDER database
+- County-level and state-level baseline mortality rates for 2015-2019 from the CDC WONDER database, https://wonder.cdc.gov/ucd-icd10.html, accessed 20 Sept 2022
 - Grid for the satellite-based PM2.5 datasets
-- 2019 TIGER/Line shapefiles for counties
+- 2019 TIGER/Line shapefiles for counties, available: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html, accessed 14 Sept 2022
 
 Outputs:
 - Gridded baseline mortality rates at the county level
@@ -43,7 +43,7 @@ This script calculates a HIA of asthma emergency room visits (ERVs) for daily re
 
 Inputs:
 - Gridded population output from prep_pop_data.py
-- Gridded surface pm2.5 estimates based on the two ABI-based AOD datasets from Zhang et al., 2022
+- Gridded surface pm2.5 estimates based on the two ABI-based AOD datasets from Zhang et al., 2022 https://doi.org/10.1175/WAF-D-22-0114.1 regridded to a 0.01 x 0.01 degree grid by co-author Zigang Wei.
 
 Outputs:
 - netCDF file containing annual total pm-attributable asthma ERVs for each dataset baseline case and alert-behavior modification exposure reduction case 
@@ -54,7 +54,7 @@ This script calculates the daily mean and max pm2.5 for each reporting area usin
 
 Inputs:
 - TIGER/Line ZCTA shapefile accessed from IPUMS NHGIS for the 2010 census ZCTAs, access date 10 May 2023
-- State shapefile from https://www.census.gov/geographies/mapping-files/2018/geo/carto-boundary-file.html
+- State shapefile from https://www.census.gov/geographies/mapping-files/2018/geo/carto-boundary-file.html, accessed 28 Sept 2022
 
 Outputs:
 - .dat file containing the mean and max pm2.5 by reporting area for each day in 2020
@@ -94,8 +94,8 @@ Inputs:
 - Csv of monitor results assigned to census tracts output from count_AQS_coverage.py
 - Csv of monitor results assigned to reporting areas output from count_airnowalert_coverage.py
 - TIGER/Line ZCTAs shapefile accessed from IPUMS NHGIS for the 2020 census, standardized to 2010 geometries, accessed 10 May 2023
-- 2019 TIGER/Line shapefiles for counties, availble: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
-- 2018 TIGER/Line shapefiles for states, available: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
+- 2019 TIGER/Line shapefiles for counties, available: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html, accessed 14 Sept 2022
+- State shapefile from https://www.census.gov/geographies/mapping-files/2018/geo/carto-boundary-file.html, accessed 28 Sept 2022
 
 Outputs:
 - All figures included in the manuscript
