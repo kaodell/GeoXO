@@ -50,7 +50,8 @@ Outputs:
 
 ### Step 2) Process AirNow Data
 #### Airnow_2020_dailyareameanmax.py (written by co-author Barron H. Henderson w/small modifications by Katelyn O'Dell)
-This script calculates the daily mean and max pm2.5 for each reporting area using the airnow monitor data. The script was written by Barron Henderson with some minor modifications from myself (Kate) and is run locally. The edits I made to this script also draw from earlier code written by Barron also available in this folder, AirNowEquivalent.pdf
+#### not included here
+This script calculates the daily mean and max pm2.5 for each reporting area using the airnow monitor data. The script was written by Barron Henderson with some minor modifications from myself (Kate) and is run locally. The edits I made to this script also draw from earlier code written by Barron, AirNowEquivalent.pdf
 
 Inputs:
 - TIGER/Line ZCTA shapefile accessed from IPUMS NHGIS for the 2010 census ZCTAs, access date 10 May 2023
