@@ -55,16 +55,18 @@ This script calculates the daily mean and max pm2.5 for each reporting area usin
 Inputs:
 - TIGER/Line ZCTA shapefile accessed from IPUMS NHGIS for the 2010 census ZCTAs, access date 10 May 2023
 - State shapefile from https://www.census.gov/geographies/mapping-files/2018/geo/carto-boundary-file.html, accessed 28 Sept 2022
+- Code downloads data_data_v2.data and site_to_reporting_area.csv files from airnowtech. Documenatation for these files is available here: https://files.airnowtech.org/?prefix=airnow/docs/
 
 Outputs:
 - .dat file containing the mean and max pm2.5 by reporting area for each day in 2020
 - Csv files for each day in 2020 with the airnow-reporting area pm2.5 concentrations assigned by ZCTAs. 
 
-#### count_AQS_coverage.py
+#### count_AQS_coverage.py - NOTE: no longer used output of this code in the submitted version of the manuscript 05.22.23
 This script assigns the individual airnow monitors to populations based on census tracts and counts number of observations, alerts, and alerted populations from monitors if only assigned to local census tracts. Run locally. Takes about 1.5 hours to run.
 
 Inputs:
 - TIGER/Line census tract shapefile and population estimates accessed from IPUMS NHGIS for the 2020 census, standardized to 2010 geometries, accessed 10 May 2023
+- Code downloads data_data_v2.data files from airnowtech. Documenatation for these files is available here: https://files.airnowtech.org/?prefix=airnow/docs/
 
 Outputs:
 - Csv of count of observations, alert days, and population by census tract
