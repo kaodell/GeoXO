@@ -5,7 +5,7 @@ To complete the analysis and create figures in the paper, the python scripts in 
 
 ### Step 1) HIA
 #### Prep_pop_data.py
-This script loads the NASA SECAD GPWv4.11 and regrids the population density using a nearest neighbors interpolation. Run locally.
+This script loads the NASA SEDAC GPWv4.11 and regrids the population density using a nearest neighbors interpolation. Run locally.
 
 Inputs:
 - 0.01 x 0.01 degree grid used for lat/lon for satellite-based PM2.5 datasets created by Hai Zhang
@@ -17,7 +17,7 @@ Outputs:
 - netCDF file containing regridded population, population density, grid area, and a US mask and california mask for the grid
 
 #### Grid_baseline_mort.py
-This script loads county level baseline rates from the CDC wonder database and grids them to the 0.01 degree grid. Run remote.
+This script loads county level baseline rates from the CDC WONDER database and grids them to the 0.01 degree grid. Run remote.
 
 Inputs:
 - County-level and state-level baseline mortality rates for 2015-2019 from the CDC WONDER database, https://wonder.cdc.gov/ucd-icd10.html, accessed 20 Sept 2022
