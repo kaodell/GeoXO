@@ -62,8 +62,10 @@ for date in date_strs:
     for i in range(airnow.shape[0]):
         if np.isnan(airnow['FINAL_mean_value'].iloc[i]):
             continue
+        elif np.isnan(airnow['FINAL_max_value'].iloc[i]):
+            continue
         obs[i] += 1
-        pm_sum[i] += airnow['FINAL_mean_value'].iloc[i]
+        pm_sum[i] += airnow['FINAL_max_value'].iloc[i] # want to use max for this
         if airnow['FINAL_mean_value'].iloc[i] >= 35.45:
             alerts_mean[i] += 1
         if airnow['FINAL_max_value'].iloc[i] >= 35.45:
