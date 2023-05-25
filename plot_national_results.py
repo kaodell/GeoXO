@@ -13,14 +13,14 @@ v1. final pre_submission
 prj_folder = '/Users/kodell/Library/CloudStorage/GoogleDrive-kodell@email.gwu.edu/My Drive/Ongoing Projects/GeoXO/'
 
 # if testing pct_reduce sensitivity, indicate here to load corect files
-pct_reduce = ''#'_0.50' or '_0.15'
+pct_reduce = '_0.30'#'_0.50' or '_0.15'
 
 # path to datasets needed
 # output from calc_annual_alert_hia.py
 mort_data_path = '/Users/kodell/Library/CloudStorage/Box-Box/Shobha_data/processed_HIA/alerts_chronic_HIA_0.01_'
-mort_version = 'v9' # v10 will be the final version once it finishes running
+mort_version = 'v10' # v10 will be the final version once it finishes running
 # output from calc_national_ervs.py
-erv_data_path = prj_folder + 'health_data/erv_hia_results/national_alerts_HIA_3_all_v7.nc'#'+ '_'+pct_reduce[3:]+'.nc'
+erv_data_path = prj_folder + 'health_data/erv_hia_results/national_alerts_HIA_'+pct_reduce[3:4]+'_all_v7.nc'#'+ '_'+pct_reduce[3:]+'.nc'
 # population output from prep_pop_data.py
 pop_file = prj_folder + 'population_data/NASA_SEDAC_pop/regridded/regrided_2020pop_0.01_final.nc'
 # airnow counts by census tract output from count_AQS_coverage.py
@@ -52,7 +52,6 @@ import cartopy.feature as cfeature
 import matplotlib as mplt
 import geopandas as gpd
 import pandas as pd
-import matplotlib.colors as mcolors
 
 plt.style.use('seaborn-colorblind')
 
@@ -78,12 +77,14 @@ abi_mort = abi_fid['base_mort'][:]
 abi_mort_bm = abi_fid['bm_mort'][:]
 abi_annavgPM = abi_fid['annavg_PM'][:]
 abi_annavgPMbm = abi_fid['annavg_PM_bm'][:]
+abi_area_covered = abi_fid['area_covered'][:]
 abi_fid.close()
-##### FIX VIIRS VERSION WITH NEW DATA RUN #####
-viirs_fid = Dataset(mort_data_path + 'viirs_og_v8.nc') # we use viirs og because there are times when viirs has data but abi does not
+
+viirs_fid = Dataset(mort_data_path + 'viirs_og_'+mort_version+'_0.30.nc') # we use viirs og because there are times when viirs has data but abi does not
 viirs_nobs = viirs_fid['PM_obs'][:]
 viirs_nalerts = viirs_fid['PM_alerts'][:]
 viirs_annavgPM = viirs_fid['annavg_PM'][:]
+viirs_area_covered = viirs_fid['area_covered'][:]
 viirs_fid.close()
 
 abi1pm_fid = Dataset(mort_data_path + 'abi1pm_proxy_'+mort_version+pct_reduce+'.nc')
@@ -92,6 +93,7 @@ abi1pm_nalerts = abi1pm_fid['PM_alerts'][:]
 abi1pm_mort_bm = abi1pm_fid['bm_mort'][:]
 abi1pm_annavgPM = abi1pm_fid['annavg_PM'][:]
 abi1pm_annavgPMbm = abi1pm_fid['annavg_PM_bm'][:]
+abi1pm_area_covered = abi1pm_fid['area_covered'][:]
 abi1pm_fid.close()
 
 an_df = pd.read_csv(airnow_path)
@@ -234,9 +236,16 @@ plt.show()
 mean_area_viirs = np.nansum((viirs_nobs/366.0)*grid_area*plt_mask)
 mean_area_abiD = np.nansum((abi_nobs/366.0)*grid_area*plt_mask)
 mean_area_abi1pm = np.nansum((abi1pm_nobs/366.0)*grid_area*plt_mask)
-# have to re-run code to outout the info we need for standard deviation (need array of obs for each day)
+tot_grid_area = np.nansum(grid_area*plt_mask)
 
 mean_area_an_zip = np.nansum((zipoutdf['ALAND10'].values + zipoutdf['AWATER10'].values)*zipoutdf['obs_count'].values)/(366.0*10**6)
+tot_zip_area = np.nansum((zipoutdf['ALAND10'].values + zipoutdf['AWATER10'].values))/(1.0*10**6)
+
+# annual mean PM
+print('abi-Daytime',np.nanmean(abi_annavgPM*plt_mask))
+print('abi-1pm',np.nanmean(abi1pm_annavgPM*plt_mask))
+print('viirs',np.nanmean(viirs_annavgPM*plt_mask))
+print('an',np.nanmean(zipoutdf['pm_mean']))
 
 #%% Figure 2 - alert days maps
 # make list of datasets to plot in a loop
@@ -284,6 +293,7 @@ print('VIIRS',np.nansum(viirs_nalerts*plt_mask))
 
 # for zipcodes do an area weighted mean since zctas can be different sizes
 print('AN alerts',np.nansum(zipoutdf_plot['alerts_max']*(zipoutdf_plot['AWATER10']+zipoutdf_plot['ALAND10']))/np.nansum(zipoutdf_plot['AWATER10']+zipoutdf_plot['ALAND10']))
+print('AN alerts',np.nansum(zipoutdf['alerts_max']*(zipoutdf['pop']))/np.nansum(zipoutdf['pop']))
 
 #%% FIGURE 3 - person alerts
 # prepare data for calculating person alers
@@ -297,24 +307,31 @@ abi1pm_person_days = np.nansum(abi1pm_nobs*pop_us)/np.nansum(pop_us)
 viirs_person_days = np.nansum(viirs_nobs*pop_us)/np.nansum(pop_us)
 an_person_days = np.nansum(an_df['obs_count'].values*an_df['pop'].values)/np.nansum(an_df['pop'].values)
 mon_person_days = np.nansum(aqs_mon['obs_count'].values*aqs_mon['CL8AA2020'].values)/np.nansum(aqs_mon['CL8AA2020'].values)
+
+# calc popw alerts
+abi_popw_alerts = np.nansum(abi_nalerts*pop_us)/np.nansum(pop_us)
+abi1pm_popw_alerts = np.nansum(abi1pm_nalerts*pop_us)/np.nansum(pop_us)
+viirs_popw_alerts = np.nansum(viirs_nalerts*pop_us)/np.nansum(pop_us)
+an_popw_alerts = np.nansum(an_df['alerts_max'].values*an_df['pop'].values)/np.nansum(an_df['pop'].values)
+
 # calculate total person-alerts in each dataset
 abi_person_alerts = np.nansum(abi_nalerts*pop_us)
 abi1pm_person_alerts = np.nansum(abi1pm_nalerts*pop_us)
 viirs_person_alerts = np.nansum(viirs_nalerts*pop_us)
-an_person_alerts = np.nansum(an_df['alerts_mean'].values*an_df['pop'].values)
+an_person_alerts = np.nansum(an_df['alerts_max'].values*an_df['pop'].values)
 mon_person_alerts = np.nansum(aqs_mon['CL8AA2020'].values*aqs_mon['alert_count'].values)
 # define colors for each dataset
 # these were picked using colorbrewer2: https://colorbrewer2.org/
-colors = ['#fdbf6f',# monitors
+colors = [#'#fdbf6f',# monitors
           '#ff7f00', # an
           '#b2df8a', # viirs
           '#a6cee3', # abi1pm
           '#1f78b4'] #abi
 # put lables, person days and person alerts counts in lists for plotting
-data_lables = ['AirNow-MT','AirNow-RA','VIIRS','ABI-1pm','ABI-Daytime']
-person_days = [mon_person_days, an_person_days, 
+data_lables = ['AirNow-RA','VIIRS','ABI-1pm','ABI-Daytime']
+person_days = [an_person_days, 
                viirs_person_days, abi1pm_person_days, abi_person_days]
-person_alerts = [mon_person_alerts,an_person_alerts,
+person_alerts = [an_person_alerts,
                  viirs_person_alerts,abi1pm_person_alerts,abi_person_alerts]
 # create figure and plot data
 fig, ax = plt.subplots(1,2,figsize=(9,5))
@@ -332,6 +349,9 @@ print('person-alert totals')
 print(data_lables, np.round(person_alerts,-3))
 print('popw mean days with obs')
 print(data_lables,'\n',np.round(person_days,2))
+
+# days in abi_daytime that are not in abi1pm
+
 
 #%% FIGURE 4 - PM annual average diff
 # create color maps
@@ -401,7 +421,7 @@ ax.bar(1,tot_plot,color='#1f78b4',yerr=[[tot_plot-low_ci],[hi_ci-tot_plot]],
        capsize=3)
 secax = ax.secondary_yaxis('right', functions=(deg2rad, rad2deg))
 secax.set_ylabel('Savings [billions, $2019]',fontsize=16)
-ax.set_xticks([0,1],['ABI-1pm '+pct_reduce[1:],'ABI-Daytime '+pct_reduce[1:]],fontsize=16)
+ax.set_xticks([0,1],['ABI-1pm','ABI-Daytime'],fontsize=16)
 ax.set_ylabel('Averted Deaths\n [deaths/year]',fontsize=16)
 plt.tight_layout()
 plt.savefig(out_fig_path+'nat_mortalities_ervs_bar'+pct_reduce+'.png',dpi=400)
@@ -414,9 +434,9 @@ print(np.nansum(abi_mort[0,:,:]*cal_area_mask)-np.nansum(abi1pm_mort_bm[0,:,:]*c
 
 #%% print additional numbers for paper
 print('ERV totals')
-print(np.nansum(geo_ervs[2,:,:]*area_mask))
-print(np.nansum(geo_erv_bm[2,:,:]*area_mask))
-print(np.nansum(leo_erv_bm[2,:,:]*area_mask))
+print(np.nansum(geo_ervs[0,:,:]*area_mask))
+print(np.nansum(geo_erv_bm[0,:,:]*area_mask))
+print(np.nansum(leo_erv_bm[0,:,:]*area_mask))
 
 print('cal only totals ervs')
 print(np.nansum(geo_ervs[0,:,:]*cal_area_mask))
