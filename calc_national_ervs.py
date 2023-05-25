@@ -134,7 +134,6 @@ abi1_events_sum = np.zeros([3,pop.shape[0],pop.shape[1]])
 # ervs under reduced pm exposure with behavior modification
 geo_events_bm_sum = np.zeros([3,pop.shape[0],pop.shape[1]])
 abi1_events_bm_sum = np.zeros([3,pop.shape[0],pop.shape[1]])
-
 # loop through dates and calculate averted ervs
 di = 0
 for date in date_str:
@@ -159,7 +158,7 @@ for date in date_str:
     # replace fill values with nans, and create abi1pm proxy
     abi_pm25_1 = np.where(abi_pm25==-9999.0,np.nan,abi_pm25)
     abi1_pm25_1 = np.where(abi1_pm25==-9999.0,np.nan,abi_pm25_1) # here we want to match abi values
-    
+        
     # mask values outside the US
     abi1_pm_us = abi1_pm25_1*area_mask
     abi_pm_us = abi_pm25_1*area_mask
@@ -218,6 +217,8 @@ nc_w_fid.createDimension('time', len(dates))
 nc_w_fid.createDimension('gridx', lat.shape[0])
 nc_w_fid.createDimension('gridy', lon.shape[0])
 nc_w_fid.createDimension('uncertainty',None)
+nc_w_fid.createDimension('counts',None)
+
 # lats and lons
 lat_w = nc_w_fid.createVariable('lat', np.float32, ('gridx',))
 lon_w = nc_w_fid.createVariable('lon', np.float32, ('gridy',))
@@ -227,6 +228,10 @@ geo_erv_bm_w = nc_w_fid.createVariable('geo_erv_bm', np.float32, ('uncertainty',
 
 abi1_erv_w = nc_w_fid.createVariable('abi1_erv', np.float32, ('uncertainty','gridx','gridy'))
 abi1_erv_bm_w = nc_w_fid.createVariable('abi1_erv_bm', np.float32, ('uncertainty','gridx','gridy'))
+
+obs_abi_w = nc_w_fid.createVariable('obs_abi', np.float32, ('counts'))
+obs_both_w = nc_w_fid.createVariable('obs_both', np.float32, ('counts'))
+obs_abi1pm_w = nc_w_fid.createVariable('obs_abi1pm', np.float32, ('counts'))
 
 # now put the data in the variables
 # lats and lons
