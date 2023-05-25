@@ -27,7 +27,7 @@ Inputs:
 Outputs:
 - Gridded baseline mortality rates at the county level
 
-#### calc_annual_alert_HIA.py (checked, running now)
+#### calc_annual_alert_HIA.py
 This script calculates the annual averages, observation completeness, and alert days for the three satellite based PM2.5 datasets. It also runs a health impact assessment for the ABI-daytime and ABI-1pm datasets. The script needs to be run separately for each dataset and is run on a remote, high memory server.
 
 Inputs:
@@ -84,7 +84,7 @@ Outputs:
 - Csv with count of observations, alert days, and population by ZCTA as defined for the 2010 census
 
 ### Step 3) Make figures
-#### Plot_national_results.py (checked - final adjustment needed for final annual HIA data)
+#### Plot_national_results.py
 This script takes inputs of counts, alerts, populations, and health impact assessments for the different pm2.5 datasets. conducts statistical analysis, and creates all figures in the paper. Run locally. Needs to be run separately for sensitivity analysis to the percent PM reduction due to behavior modification on alert days.
 
 Inputs:
