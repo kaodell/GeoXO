@@ -21,7 +21,7 @@ mort_data_path = '/Volumes/ODell_Files/from_pegasus/alerts_chronic_HIA_0.01_'
 mort_version = 'v10' # v10 will be the final version once it finishes running
 # output from calc_national_ervs.py
 # add "_mort_" before all in the filename to load short-term mortality results reported in the supplement 
-erv_data_path = prj_folder + 'HIA_results/erv_hia_results/national_alerts_HIA_'+pct_reduce[3:4]+'_mort_all_v7.nc'#'+ '_'+pct_reduce[3:]+'.nc'
+erv_data_path = prj_folder + 'HIA_results/erv_hia_results/national_alerts_HIA_'+pct_reduce[3:4]+'_all_v7.nc'#'+ '_'+pct_reduce[3:]+'.nc'
 # population output from prep_pop_data.py
 pop_file = prj_folder + 'population_data/NASA_SEDAC_pop/regridded/regrided_2020pop_0.01_final.nc'
 # airnow counts by census tract output from count_AQS_coverage.py
