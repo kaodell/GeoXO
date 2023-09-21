@@ -39,7 +39,7 @@ Outputs:
 - netCDF containing health impact assessments, counts of days with observations, alert days, area covered each day, and population-weighted PM
 
 #### Calc_national_ervs.py
-This script calculates a HIA of asthma emergency room visits (ERVs) for daily reductions in pm exposure for the ABI-Daytime and ABI-1pm datasets for the year 2020. Run remotely.
+This script calculates a HIA of asthma emergency room visits (ERVs) and mortality for daily reductions in pm exposure for the ABI-Daytime and ABI-1pm datasets for the year 2020. Asthma ERVs and mortality are run seprately. Run remotely.
 
 Inputs:
 - Gridded population output from prep_pop_data.py
@@ -61,7 +61,7 @@ Outputs:
 - .dat file containing the mean and max pm2.5 by reporting area for each day in 2020
 - Csv files for each day in 2020 with the airnow-reporting area pm2.5 concentrations assigned by ZCTAs. 
 
-#### count_AQS_coverage.py - NOTE: no longer used output of this code in the submitted version of the manuscript 05.22.23
+#### count_AQS_coverage.py 
 This script assigns the individual airnow monitors to populations based on census tracts and counts number of observations, alerts, and alerted populations from monitors if only assigned to local census tracts. Run locally. Takes about 1.5 hours to run.
 
 Inputs:
@@ -100,5 +100,5 @@ Inputs:
 - State shapefile from https://www.census.gov/geographies/mapping-files/2018/geo/carto-boundary-file.html, accessed 28 Sept 2022
 
 Outputs:
-- All figures included in the manuscript
+- All figures included in the manuscript and supplement
 
