@@ -43,7 +43,7 @@ abi1pm_files = os.listdir(prj_folder + 'datafiles/in/ABI1pm/2020/')
 # regridded population file
 pop_file = prj_folder + 'datafiles/in/population_data/regrided_2020pop_0.01_final.nc'
 # gridded baseline mortality rates
-br_file = prj_folder + 'datafiles/out/gridded_cnty_mort_final.csv'
+br_file = prj_folder + 'datafiles/out/gridded_mort/gridded_cnty_mort_final.csv'
 
 # description and path of output file 
 out_desc = '0.01_'+case+'_'+case_desc+'_v10_'+pct_reduce_str 

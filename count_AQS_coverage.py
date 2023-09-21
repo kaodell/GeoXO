@@ -8,7 +8,7 @@ written by: Katelyn O'Dell, with guidance from code written by Barron H. Henders
 """
 #%% user inputs
 # local path to project folder
-prj_folder = '/Users/kodell/Library/CloudStorage/GoogleDrive-kodell@email.gwu.edu/My Drive/Ongoing Projects/GeoXO/'
+prj_folder = '/Volumes/ODell_Files/Work_Files/GWU_072523/Ongoing_Projects/GeoXO/'
 
 # path to census tract shape files and population from IPUMS
 ct_shp_fn = prj_folder + 'population_data/ACS_IPUMS/2020pop_2010tracts/nhgis0012_shape/nhgis0012_shapefile_tl2020_us_tract_2010/US_tract_2010_tl20.shp'

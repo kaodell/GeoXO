@@ -34,14 +34,24 @@ abi1_files = os.listdir(prj_folder + 'datafiles/in/ABI1pm/2020/')
 # regridded population file
 pop_file = prj_folder + 'datafiles/in/population_data/regrided_2020pop_0.01_final.nc'
 
-# hard-code asthma baseline rates for short-term exposure analysis
-# these are from HCUP via the CDC webpage on asthma in the US, values for 2018.
-# https://www.cdc.gov/asthma/healthcare-use/2018/table_a.html
-# last accesed 11 May 2023
-asth_erv_br = 50.2/10000 # SE 2.34
-# relative risk values from Orellano et al. 2017 meta analysis doi:https://doi.org/10.1371/journal.pone.0174050
-asth_rrs = [1.03, 1.01, 1.05]
+event = 'mort' # mort or asth
 
+if event == 'asth':
+    # hard-code asthma baseline rates for short-term exposure analysis
+    # these are from HCUP via the CDC webpage on asthma in the US, values for 2018.
+    # https://www.cdc.gov/asthma/healthcare-use/2018/table_a.html
+    # last accesed 11 May 2023
+    asth_erv_br = 50.2/10000 # SE 2.34
+    # relative risk values from Orellano et al. 2017 meta analysis doi:https://doi.org/10.1371/journal.pone.0174050
+    asth_rrs = [1.03, 1.01, 1.05]
+elif event == 'mort':
+    # for revisions: run short term mort (run code seprately for asthma and mortality)
+    # hard-code short-term PM2.5 RR from Dai et al. 2014, doi: https://doi.org/10.1289/ehp.1307568
+    asth_rrs = [1.012,1.009,1.014]
+    # uses non-accidental mortality ICD10 A00-R99, obtained for full US in 2018 from CDC WONDER database
+    # https://wonder.cdc.gov/
+    asth_erv_br = 792.9/100000 # SE 0.5
+    
 # set threshold for alerts
 alert_cutoff = 35.45
 alert_cutoff_aqi = 101.0
@@ -53,7 +63,7 @@ case_desc = 'all' # use proxy data for flagging
 # where to put output files
 version = 'v7'
 out_fp = prj_folder + 'datafiles/out/'
-out_desc = str(pct_reduce)[2:] + '_' + case_desc +'_'+ version
+out_desc = str(pct_reduce)[2:] + '_' + event +'_'+case_desc +'_'+ version
 
 #%% import modules
 from netCDF4 import Dataset
@@ -166,6 +176,44 @@ for date in date_str:
     # calcuate reduced pm25 where there are alerts
     geo_pm25_bm24_epa = np.where(abi_pm_us>=alert_cutoff, (1.0-pct_reduce)*abi_pm_us ,abi_pm_us)
     abi1_pm25_bm24_epa = np.where(abi1_pm_us>=alert_cutoff, (1.0-pct_reduce)*abi1_pm_us, abi_pm_us) # need to put abi here not abi1 so the baseline matches
+
+    # if calculating mort, repeat above for the previous day and average to match CRF
+    if event == 'mort':
+        if di != 0: # only average for days after the first day, for the first day just use that days mean
+            date_2 = date_str[di-1]
+            # load abi 1pm
+            abi1_fp = abi1pm_file + date_2 +'_0.01x0.01.nc'
+            abi1_fn = abi1_fp.split('/')[-1]
+            # check for file first, abi 1pm is missing a day
+            if abi1_fn in abi1_files:
+                abi1 = Dataset(abi1pm_file + date_2 +'_0.01x0.01.nc')
+                abi1_pm25_2 = abi1['pm25'][:].data
+                abi1.close()
+            else:
+                abi1_pm25_2 = np.empty([pop.shape[0],pop.shape[1]])
+                abi1_pm25_2[:] = np.nan
+    
+            # load abi
+            abi = Dataset(abi_pm_file + date_2 +'_0.01x0.01.nc')
+            abi_pm25_2 = abi['pm25'][:].data
+            abi.close()
+            
+            # replace fill values with nans, and create abi1pm proxy
+            abi_pm25_1 = np.where(abi_pm25_2==-9999.0,np.nan,abi_pm25_2)
+            abi1_pm25_1 = np.where(abi1_pm25_2==-9999.0,np.nan,abi_pm25_1) # here we want to match abi values
+                
+            # mask values outside the US
+            abi1_pm_us_2 = abi1_pm25_1*area_mask
+            abi_pm_us_2 = abi_pm25_1*area_mask
+                
+            # calcuate reduced pm25 where there are alerts
+            geo_pm25_bm24_epa_2 = np.where(abi_pm_us_2>=alert_cutoff, (1.0-pct_reduce)*abi_pm_us_2 ,abi_pm_us_2)
+            abi1_pm25_bm24_epa_2 = np.where(abi1_pm_us_2>=alert_cutoff, (1.0-pct_reduce)*abi1_pm_us_2, abi_pm_us_2) # need to put abi here not abi1 so the baseline matches
+    
+            abi1_pm_us = np.nanmean([abi1_pm_us,abi1_pm_us_2],axis=0)
+            abi_pm_us = np.nanmean([abi_pm_us,abi_pm_us_2],axis=0)
+            geo_pm25_bm24_epa = np.nanmean([geo_pm25_bm24_epa,geo_pm25_bm24_epa_2],axis=0)
+            abi1_pm25_bm24_epa = np.nanmean([abi1_pm25_bm24_epa,abi1_pm25_bm24_epa_2],axis=0)
 
     # calculate betas from RRs for the HIA equation
     asth_rrs = np.array(asth_rrs)

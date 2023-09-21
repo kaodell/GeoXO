@@ -10,27 +10,28 @@ v1. final pre_submission
 """
 #%% user inputs
 # path to local project folder
-prj_folder = '/Users/kodell/Library/CloudStorage/GoogleDrive-kodell@email.gwu.edu/My Drive/Ongoing Projects/GeoXO/'
+prj_folder = '/Volumes/ODell_Files/Work_Files/GWU_072523/Ongoing_Projects/GeoXO/'
 
 # if testing pct_reduce sensitivity, indicate here to load corect files
 pct_reduce = '_0.30'#'_0.50' or '_0.15'
 
 # path to datasets needed
 # output from calc_annual_alert_hia.py
-mort_data_path = '/Users/kodell/Library/CloudStorage/Box-Box/Shobha_data/processed_HIA/alerts_chronic_HIA_0.01_'
+mort_data_path = '/Volumes/ODell_Files/from_pegasus/alerts_chronic_HIA_0.01_'
 mort_version = 'v10' # v10 will be the final version once it finishes running
 # output from calc_national_ervs.py
-erv_data_path = prj_folder + 'health_data/erv_hia_results/national_alerts_HIA_'+pct_reduce[3:4]+'_all_v7.nc'#'+ '_'+pct_reduce[3:]+'.nc'
+# add "_mort_" before all in the filename to load short-term mortality results reported in the supplement 
+erv_data_path = prj_folder + 'HIA_results/erv_hia_results/national_alerts_HIA_'+pct_reduce[3:4]+'_mort_all_v7.nc'#'+ '_'+pct_reduce[3:]+'.nc'
 # population output from prep_pop_data.py
 pop_file = prj_folder + 'population_data/NASA_SEDAC_pop/regridded/regrided_2020pop_0.01_final.nc'
 # airnow counts by census tract output from count_AQS_coverage.py
 aqs_mon_path = prj_folder + 'concentration_data/EPA_AQI/AQS_obs_alert_counts_2020.csv'
 # airnow counts by reporting area/ZCTAs output form count_airnowalert_coverage.py
-airnow_path = prj_folder + 'airnowalert_counts_dailymean.csv'
+airnow_path = prj_folder + 'misc/airnowalert_counts_dailymean.csv'
 
 # path to datasets to plot/double check
 # gridded baseline mortality rates output from grid_baseline_mort.py
-gmort_br_path = '/Users/kodell/Library/CloudStorage/Box-Box/gridded_cnty_mort_final.csv'
+gmort_br_path = '/Volumes/ODell_Files/from_pegasus/gridded_cnty_mort_final.csv'
 # original baseline mortality rate values and shapefile
 mort_br_path = prj_folder + 'health_data/baseline_rates/Underlying Cause of Death, 1999-2020.txt'
 cnty_shp_fn = prj_folder + 'health_data/baseline_rates/tl_2019_us_county/tl_2019_us_county.shp'
@@ -41,7 +42,7 @@ st_shp_fn = prj_folder + 'health_data/cb_2018_us_state_500k/cb_2018_us_state_500
 zip_codes_shp_fn = prj_folder+'population_data/ACS_IPUMS/2020pop_2010zctas/nhgis0011_shape/nhgis0011_shapefile_tl2020_us_zcta_2010/US_zcta_2010_tl20.shp'
 
 # local path to place figures
-out_fig_path = prj_folder+'figures/ACX_PM/final/'
+out_fig_path = prj_folder+'figures/ACX_PM/final/revisions/'
 
 #%% import modules
 from netCDF4 import Dataset
@@ -85,19 +86,24 @@ viirs_nobs = viirs_fid['PM_obs'][:]
 viirs_nalerts = viirs_fid['PM_alerts'][:]
 viirs_annavgPM = viirs_fid['annavg_PM'][:]
 viirs_area_covered = viirs_fid['area_covered'][:]
+viirs_mort = viirs_fid['base_mort'][:]
+viirs_mort_bm = viirs_fid['bm_mort'][:]
+viirs_annavgPM = viirs_fid['annavg_PM'][:]
+viirs_annavgPMbm = viirs_fid['annavg_PM_bm'][:]
 viirs_fid.close()
 
-abi1pm_fid = Dataset(mort_data_path + 'abi1pm_proxy_'+mort_version+pct_reduce+'.nc')
+abi1pm_fid = Dataset(mort_data_path + 'abi1pm_proxy_'+mort_version+pct_reduce+'.nc') # change proxy to og to run the sensitivity analysis in Table S2
 abi1pm_nobs = abi1pm_fid['PM_obs'][:]
 abi1pm_nalerts = abi1pm_fid['PM_alerts'][:]
 abi1pm_mort_bm = abi1pm_fid['bm_mort'][:]
 abi1pm_annavgPM = abi1pm_fid['annavg_PM'][:]
+abi1pm_mort = abi_fid['base_mort'][:]
 abi1pm_annavgPMbm = abi1pm_fid['annavg_PM_bm'][:]
 abi1pm_area_covered = abi1pm_fid['area_covered'][:]
 abi1pm_fid.close()
 
 an_df = pd.read_csv(airnow_path)
-aqs_mon = pd.read_csv(aqs_mon_path)
+aqs_mon1 = pd.read_csv(aqs_mon_path)
 
 nc_fid = Dataset(pop_file)
 pop = nc_fid['population'][:].data
@@ -119,6 +125,16 @@ day_nums = np.arange(0,366)
 # note, there will be a few slight differences because we replaced unreliable
 # and suppressed counties in the original file with state-level baseline mort rates
 
+# remove outside contig us fips from aqs_mon
+inds_drop = []
+aqs_mon1.reset_index(inplace=True,drop=True)
+for i in range(aqs_mon1.shape[0]):
+    fip = aqs_mon1['STATEFP10'].iloc[i]
+    if fip in [2,15]:
+        inds_drop.append(i)
+aqs_mon = aqs_mon1.drop(inds_drop,axis=0)
+aqs_mon.reset_index(inplace=True,drop=True)
+
 # first adjust mismatched county code
 ind_up = np.where(br_df['County Code'] == 46113)[0]
 br_df.loc[ind_up,'County Code'] = 46102
@@ -126,11 +142,12 @@ br_df.loc[ind_up,'County Code'] = 46102
 gmort = gbr_df['cnty_mort_rate'].values
 pmort = gmort.reshape([2600, 5900])
 # plot gridded values
+'''
 ax = plt.axes(projection=ccrs.PlateCarree())
 plt.pcolormesh(glon, glat, pmort,vmin=0,vmax=1500)
 ax.coastlines()
 ax.set_title('gridded baseline mort')
-plt.show()
+#plt.show()
 
 # now for original file to compare
 # drop values outside the contig US
@@ -164,8 +181,8 @@ ax = plt.axes(projection=ccrs.PlateCarree())
 plt.pcolormesh(glon, glat, (10**5)*geo_ervs[1,:,:]/pop,vmin=0,vmax=10)
 ax.coastlines()
 ax.set_title('geo_ervs')
-plt.show()
-
+#plt.show()
+'''
 #%% FIGURE 1 - observations and annual averages
 # prep data for plotting
 # edit abi datasets so that values with no data on the map show up as gray for the annual means
@@ -190,7 +207,7 @@ my_red = mplt.cm.get_cmap('Reds').copy()
 my_red.set_under('darkgray')
 # put titles in a list so we can add them to panels in a loop
 titles = ['(a) AirNow-RA','(e) AirNow-RA','(b) VIIRS','(f) VIIRS',
-          '(c) ABI, 1pm', '(g) ABI, 1pm','(d) ABI, daytime','(h) ABI, daytime']
+          '(c) ABI-1pm', '(g) ABI-1pm','(d) ABI-Daytime','(h) ABI-Daytime']
 
 # now, finally, create figure and plot these data
 fig, axarr1 = plt.subplots(nrows=4,ncols=2,subplot_kw={'projection': ccrs.PlateCarree()},
@@ -230,7 +247,8 @@ cbar = fig.colorbar(cs2,ax=[axarr[-1]],orientation='horizontal',pad=0.1,shrink=0
 cbar.set_label(label='Mean PM$_{2.5}$ [$\mu$g m$^{-3}$]',size=16)
 # savefigure
 plt.savefig(out_fig_path+'annual2020_observations_nat_all.png',dpi=300)
-plt.show()
+#plt.show()
+plt.close()
 
 # print numbers for figure 1: calculate average area covered by each dataset each day
 mean_area_viirs = np.nansum((viirs_nobs/366.0)*grid_area*plt_mask)
@@ -253,7 +271,7 @@ data = [abi_nalerts*plt_mask,
         (viirs_nalerts)*plt_mask,
         (abi1pm_nalerts)*plt_mask]
 # list of titles
-titles = ['(a) ABI, Daytime','(b) VIIRS','(c) ABI, 1pm','(d) AirNow-RA']
+titles = ['(a) ABI-Daytime','(b) VIIRS','(c) ABI-1pm','(d) AirNow-RA']
 # create figure
 fig, axarr = plt.subplots(nrows=2,ncols=2,subplot_kw={'projection': ccrs.PlateCarree()},
                           figsize=(11,5))
@@ -278,7 +296,37 @@ cbar = fig.colorbar(cs,cax=cax,orientation='horizontal',pad=0.1,shrink=0.3,
 cbar.set_label(label='N Alert Days, 2020',size=12)
 # save figure
 plt.savefig(out_fig_path+'annual2020_alerts_nat_all.png',dpi=300)
-plt.show()
+#plt.show()
+plt.close()
+
+
+# Difference Plot for SI
+titles = ['(a) ABI, Daytime - VIIRS','(b) ABI, Daytime - ABI, 1pm']
+# create figure
+fig, axarr = plt.subplots(nrows=2,ncols=1,subplot_kw={'projection': ccrs.PlateCarree()},
+                          figsize=(6,5))
+data = [(abi_nalerts-viirs_nalerts)*plt_mask,
+        (abi_nalerts-abi1pm_nalerts)*plt_mask]
+# loop through and plot satellite datasets
+axarr=axarr.flatten()
+for i in range(len(axarr)):
+    axarr[i].axis("off")
+    axarr[i].add_feature(cfeature.STATES.with_scale('50m'),edgecolor='gray')
+    cs = axarr[i].pcolormesh(glon,glat,data[i],vmin = -10,vmax=10,
+                             transform=ccrs.PlateCarree(),cmap='RdBu_r')
+    axarr[i].set_title(titles[i],fontsize=12)
+# plot airnow dataset
+# adjust figure dimensions and add colobar  
+plt.subplots_adjust(bottom=0.17)
+cax = plt.axes([0.3, 0.1, 0.4, 0.04])
+cbar = fig.colorbar(cs,cax=cax,orientation='horizontal',pad=0.1,shrink=0.3,
+                ticks = [-10,-5,0,5,10],extend='both')
+cbar.set_label(label='Difference in Alert Days, 2020',size=12)
+# save figure
+plt.savefig(out_fig_path+'annual2020_alerts_diff_all.png',dpi=300)
+#plt.show()
+plt.close()
+
 
 # calculate and print numbers for figure discussion in the manuscript
 print('mean alert days for each dataset')
@@ -343,6 +391,7 @@ ax[0].set_xticks(data_lables, data_lables,rotation=45)
 ax[1].set_xticks(data_lables, data_lables,rotation=45)
 plt.subplots_adjust(bottom = 0.3)
 plt.savefig(out_fig_path + 'person_alerts_all.png',dpi=300)
+plt.close()
 
 # print numbers used in discussion of this figure
 print('person-alert totals')
@@ -360,10 +409,17 @@ my_blues.set_under('darkgray')
 my_viridis = mplt.cm.get_cmap('viridis')
 my_viridis.set_under('darkgray')
 
+pre_nan_inds = np.where(np.isnan(abi_annavgPM))
 # put data, colormaps, and titles in a list for plotting
-data =  [(abi_annavgPM-abi_annavgPMbm)*plt_mask,
-         (abi_annavgPM-abi1pm_annavgPMbm)*plt_mask,
-         ((-abi_annavgPMbm+abi1pm_annavgPMbm))*plt_mask,]
+diff1 = abi_annavgPM-abi_annavgPMbm
+#diff2 = abi1pm_annavgPM-abi1pm_annavgPMbm
+diff2 = abi_annavgPM-abi1pm_annavgPMbm
+diff3 = diff1-diff2
+diff1[pre_nan_inds] = -999 # set to -999 so it shows up as gray on the plot
+diff2[pre_nan_inds] = -999 
+diff3[pre_nan_inds] = -999 
+
+data =  [diff1*plt_mask,diff2*plt_mask,diff3*plt_mask]
 cmaps = [my_blues,my_blues,my_viridis]
 titles = ['(a) ABI-Daytime','(b) ABI-1pm','(c) Difference']
 
@@ -374,18 +430,24 @@ for ax in axarr.flatten():
     ax.patch.set_visible(False)
     ax.axis("off")
     ax.add_feature(cfeature.STATES.with_scale('50m'),edgecolor='gray')
-    cs = ax.pcolormesh(glon,glat,data[i],vmin=0.1,vmax=3,transform=ccrs.PlateCarree(),cmap=cmaps[i])
+    cs = ax.pcolormesh(glon,glat,data[i],vmin=0,vmax=3,transform=ccrs.PlateCarree(),cmap=my_blues)
     cbar = fig.colorbar(cs,ax=ax,orientation='horizontal',pad=0,shrink=0.6,
                         ticks=[0.1,1,2,3],extend='max')
-    cbar.set_label(label=['PM$_{2.5}$ Reduction '+pct_reduce[1:]],size=16)
+    cbar.set_label(label='PM$_{2.5}$ Reduction '+pct_reduce[1:],size=16) #+pct_reduce[1:]
     ax.set_title(titles[i],fontsize=18)
     i += 1
 plt.tight_layout()
 plt.savefig(out_fig_path+'annual_mean_pm25_reduction'+pct_reduce+'.png',dpi=350)
 plt.show()
+#plt.close()
 
 # print numbers for figure discussion
 # national mean pm2.5 exposure reductions
+# remove -999s
+diff1[pre_nan_inds] = np.nan # set to -999 so it shows up as gray on the plot
+diff2[pre_nan_inds] = np.nan
+diff3[pre_nan_inds] = np.nan
+data =  [diff1*plt_mask,diff2*plt_mask,diff3*plt_mask]
 print(np.nanmean(data[0]),np.nanmean(data[1]),np.nanmean(data[2]))
 # population-weighted mean exposure reduction
 pop_mean_base = np.nansum(pop_us*abi_annavgPM)/np.nansum(pop_us)
@@ -425,7 +487,8 @@ ax.set_xticks([0,1],['ABI-1pm','ABI-Daytime'],fontsize=16)
 ax.set_ylabel('Averted Deaths\n [deaths/year]',fontsize=16)
 plt.tight_layout()
 plt.savefig(out_fig_path+'nat_mortalities_ervs_bar'+pct_reduce+'.png',dpi=400)
-fig.show()
+#fig.show()
+plt.close()
 
 # print numbers used in figure discussion
 print('cal only totals deaths')
@@ -434,9 +497,9 @@ print(np.nansum(abi_mort[0,:,:]*cal_area_mask)-np.nansum(abi1pm_mort_bm[0,:,:]*c
 
 #%% print additional numbers for paper
 print('ERV totals')
-print(np.nansum(geo_ervs[0,:,:]*area_mask))
-print(np.nansum(geo_erv_bm[0,:,:]*area_mask))
-print(np.nansum(leo_erv_bm[0,:,:]*area_mask))
+print('baseline',np.nansum(geo_ervs[0,:,:]*area_mask))
+print('geo reduced pm',np.nansum(geo_erv_bm[0,:,:]*area_mask))
+print('leo reduced pm',np.nansum(leo_erv_bm[0,:,:]*area_mask))
 
 print('cal only totals ervs')
 print(np.nansum(geo_ervs[0,:,:]*cal_area_mask))
